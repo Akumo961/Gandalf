@@ -1,106 +1,80 @@
-def get_file_extension(text):
-    if "python file" in text:
-        ex = ".py"
-    elif "java file" in text:
-        ex = ".java"
-    elif "text file" in text:
-        ex = ".txt"
-    elif "html file" in text:
-        ex = ".html"
-    elif "css file" in text:
-        ex = ".css"
-    elif "javascript file" in text:
-        ex = ".js"
-    elif "json file" in text:
-        ex = ".json"
-    elif "xml file" in text:
-        ex = ".xml"
-    elif "csv file" in text:
-        ex = ".csv"
-    elif "markdown file" in text:
-        ex = ".md"
-    elif "yaml file" in text:
-        ex = ".yaml"
-    elif "image file" in text:
-        ex = ".jpg"  # You can add more image extensions if needed
-    elif "video file" in text:
-        ex = ".mp4"  # You can add more video extensions if needed
-    elif "audio file" in text:
-        ex = ".mp3"  # You can add more audio extensions if needed
-    elif "pdf file" in text:
-        ex = ".pdf"
-    elif "word file" in text:
-        ex = ".docx"
-    elif "excel file" in text:
-        ex = ".xlsx"
-    elif "powerpoint file" in text:
-        ex = ".pptx"
-    elif "zip file" in text:
-        ex = ".zip"
-    elif "tar file" in text:
-        ex = ".tar"
-    else:
-        ex = ""  # Default case if no match found
-    return ex
+"""Safe, voice-driven file creation utility."""
 
-def update_text(text):
-    if "python file" in text:
-        text = text.replace("python file", "")
-    elif "java file" in text:
-        text = text.replace("java file", "")
-    elif "text file" in text:
-        text = text.replace("text file", "")
-    elif "html file" in text:
-        text = text.replace("html file", "")
-    elif "css file" in text:
-        text = text.replace("css file", "")
-    elif "javascript file" in text:
-        text = text.replace("javascript file", "")
-    elif "json file" in text:
-        text = text.replace("json file", "")
-    elif "xml file" in text:
-        text = text.replace("xml file", "")
-    elif "csv file" in text:
-        text = text.replace("csv file", "")
-    elif "markdown file" in text:
-        text = text.replace("markdown file", "")
-    elif "yaml file" in text:
-        text = text.replace("yaml file", "")
-    elif "image file" in text:
-        text = text.replace("image file", "")
-    elif "video file" in text:
-        text = text.replace("video file", "")
-    elif "audio file" in text:
-        text = text.replace("audio file", "")
-    elif "pdf file" in text:
-        text = text.replace("pdf file", "")
-    elif "word file" in text:
-        text = text.replace("word file", "")
-    elif "excel file" in text:
-        text = text.replace("excel file", "")
-    elif "powerpoint file" in text:
-        text = text.replace("powerpoint file", "")
-    elif "zip file" in text:
-        text = text.replace("zip file", "")
-    elif "tar file" in text:
-        text = text.replace("tar file", "")
-    else:
-        pass
-    return text
+from __future__ import annotations
+
+from pathlib import Path
 
 
+EXTENSIONS = {
+    "python file": ".py",
+    "java file": ".java",
+    "text file": ".txt",
+    "html file": ".html",
+    "css file": ".css",
+    "javascript file": ".js",
+    "json file": ".json",
+    "xml file": ".xml",
+    "csv file": ".csv",
+    "markdown file": ".md",
+    "yaml file": ".yaml",
+    "image file": ".jpg",
+    "video file": ".mp4",
+    "audio file": ".mp3",
+    "pdf file": ".pdf",
+    "word file": ".docx",
+    "excel file": ".xlsx",
+    "powerpoint file": ".pptx",
+    "zip file": ".zip",
+    "tar file": ".tar",
+}
+RUNTIME_DIR = Path(".runtime")
 
-def create_file(text):
-    selected_ex = get_file_extension(text)
-    text = update_text(text)
-    if "named" in text or "with name" in text:
-        text = text.replace("named","")
-        text = text.replace("with name","")
-        text = text.replace("create","")
-        text = text.strip()
-        with open(f"{text}{selected_ex}","w"):
-            pass
-    else :
-        with open(f"demo{selected_ex}","w"):
-            pass
 
+def get_file_extension(text: str) -> str:
+    """Return the first supported extension mentioned in a command."""
+    normalized = text.lower()
+    for file_type, extension in EXTENSIONS.items():
+        if file_type in normalized:
+            return extension
+    return ""
+
+
+def update_text(text: str) -> str:
+    """Remove the supported file-type phrase from a command."""
+    normalized = text.lower()
+    for file_type in EXTENSIONS:
+        normalized = normalized.replace(file_type, "")
+    return normalized
+
+
+def _safe_filename(command: str, extension: str) -> Path:
+    name = command.replace("named", "").replace("with name", "")
+    name = name.replace("create", "").strip()
+    if not name:
+        name = "demo"
+
+    # Keep the feature intentionally limited to a single filename, never a path.
+    filename = Path(name).name.replace("..", "")
+    if not filename:
+        filename = "demo"
+    if Path(filename).suffix.lower() != extension:
+        filename = f"{filename}{extension}"
+
+    RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
+    destination = (RUNTIME_DIR / filename).resolve()
+    runtime_root = RUNTIME_DIR.resolve()
+    if destination.parent != runtime_root:
+        raise ValueError("file name must not contain a directory path")
+    return destination
+
+
+def create_file(text: str) -> Path:
+    """Create a file under `.runtime` and return its path."""
+    extension = get_file_extension(text)
+    if not extension:
+        raise ValueError("unsupported file type")
+
+    destination = _safe_filename(update_text(text), extension)
+    destination.touch(exist_ok=True)
+    print(f"Created {destination}")
+    return destination
