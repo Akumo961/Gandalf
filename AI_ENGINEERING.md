@@ -23,13 +23,13 @@ The application combines:
 - computer vision
 - image generation
 
-This makes Gandalf a useful portfolio example for multimodal AI application development.
+This makes Gandalf a practical portfolio example for multimodal AI application development.
 
 ### 3. AI-to-tool integration
 
 The project connects model-driven interaction to real capabilities such as system inspection, automation, weather, messaging, file creation, image generation, and computer vision.
 
-This is the key AI-engineering concept: **the model produces useful intent, while application code owns the actual side effects.**
+The core engineering boundary is: **model/provider code produces intent and content; deterministic application code owns side effects.**
 
 ### 4. Concurrent application workflows
 
@@ -37,7 +37,24 @@ The application uses Python threads for independent workflows including speech, 
 
 ### 5. Modular AI architecture
 
-AI reasoning, vision, speech, automation, and system features are separated into modules. This provides a foundation for replacing individual providers without rewriting the entire application.
+AI reasoning, vision, speech, automation, and system features are separated into modules. Provider endpoints are now configurable so individual integrations can evolve independently.
+
+## Improvements completed
+
+The repository has been actively modernized without pretending the prototype is production-ready:
+
+- Removed hardcoded personal filesystem paths.
+- Removed a hardcoded mobile-camera address.
+- Removed hardcoded WhatsApp recipient data and committed messaging history.
+- Moved runtime state to `.runtime/` and added repository ignore rules.
+- Added configurable provider endpoints and model settings.
+- Added bounded network timeouts and graceful provider failures.
+- Replaced shell-based application execution with `subprocess` calls that do not invoke a shell.
+- Constrained voice-created files to the runtime directory.
+- Added pure, unit-testable command validation helpers.
+- Added pytest coverage for command normalization and file-boundary validation.
+- Added Ruff configuration and a GitHub Actions quality gate.
+- Added architecture and security documentation.
 
 ## What I would discuss in an AI Engineer interview
 
@@ -45,38 +62,36 @@ AI reasoning, vision, speech, automation, and system features are separated into
 
 > I built Gandalf as a multimodal AI assistant rather than a simple chatbot. The application receives voice or text input, routes the request through an orchestration layer, invokes an LLM when reasoning is required, and dispatches specialized capabilities such as computer vision, image generation, or desktop automation.
 
-### Tool calling
+### Tool execution
 
-> One of the main engineering challenges is separating language understanding from side effects. The long-term architecture should expose tools with explicit schemas and validate tool arguments before execution.
+> A key engineering concern is separating language understanding from side effects. The current implementation keeps execution in deterministic Python functions and has started moving provider configuration and input validation outside the orchestration layer.
 
 ### Reliability
 
-> An AI system that can control a computer needs stronger safeguards than a conversational application. I therefore treat model output as untrusted input and aim to keep execution logic inside deterministic application code.
+> An AI system that can control a computer needs stronger safeguards than a conversational application. I treat model output and speech-recognition output as untrusted input, use bounded network calls, and avoid shell execution for application launching.
 
 ### Multimodal AI
 
-> Gandalf combines speech, text, and image inputs with generated responses, which gives me practical experience designing AI applications that operate across modalities.
+> Gandalf combines speech, text, and image inputs with generated responses, giving me practical experience integrating multiple AI modalities into one application.
 
-## Recommended modernization roadmap
+## Next engineering priorities
 
-The following work would make Gandalf substantially stronger as an AI Engineering portfolio project:
+The remaining work that would make Gandalf substantially stronger is:
 
-1. **Provider abstraction** — isolate LLM, speech, vision, and image-generation providers behind interfaces.
+1. **Provider interfaces** — define common interfaces for LLM, speech, vision, and image-generation adapters.
 2. **Structured tool schemas** — replace keyword-heavy routing with typed tool definitions and validated arguments.
-3. **FastAPI service layer** — expose the agent through a clean API instead of coupling all orchestration to the desktop process.
-4. **Configuration management** — remove hard-coded paths and provider settings; use environment-based configuration.
-5. **Automated testing** — unit-test routing, tool validation, integrations, and failure handling.
-6. **Evaluation** — create representative prompts and measure routing accuracy, tool-selection accuracy, and response quality.
-7. **Observability** — add structured logs and metrics while avoiding sensitive user data.
-8. **Safety boundaries** — require confirmation for destructive or high-impact actions.
-9. **Containerization** — isolate the API/service components from the Windows desktop integration layer.
-10. **Azure deployment path** — add an optional Azure architecture using Azure OpenAI, Azure AI services, managed identity, Key Vault, Application Insights, and GitHub Actions.
-11. **CI/CD** — automatically lint, type-check, test, and package the project on every pull request.
-12. **Documentation** — document architecture decisions, threat model, evaluation methodology, and deployment design.
+3. **Event-driven runtime** — replace file polling with an in-process queue/event bus.
+4. **FastAPI service layer** — expose the agent through a clean API while keeping Windows-only tools in a separate local worker.
+5. **Evaluation** — create representative prompts and measure routing accuracy, tool-selection accuracy, and response quality.
+6. **Observability** — add structured logs and metrics while avoiding sensitive user data.
+7. **Safety boundaries** — require confirmation for destructive or externally visible actions.
+8. **Integration testing** — mock AI providers and test dangerous tool paths without controlling a real desktop.
+9. **Containerization** — isolate API/service components from the Windows desktop integration layer.
+10. **Optional Azure deployment** — use Azure OpenAI, managed identity, Key Vault, Application Insights, and GitHub Actions only when actually implemented.
 
 ## Azure-ready target architecture
 
-The strongest future version of this project would separate the local computer-control agent from a cloud AI service:
+A stronger future version can separate the local computer-control agent from a cloud AI service:
 
 ```text
                  ┌──────────────────────┐
@@ -85,7 +100,7 @@ The strongest future version of this project would separate the local computer-c
                             │
                             ▼
                  ┌──────────────────────┐
-                 │ FastAPI Agent API     │
+                 │ FastAPI Agent API    │
                  │ Auth + Validation    │
                  └──────────┬───────────┘
                             │
@@ -117,7 +132,7 @@ This target architecture is a **roadmap**, not a claim that all Azure components
 
 ## Portfolio value
 
-Gandalf is most valuable on a resume when presented as evidence of:
+Gandalf is strongest on a resume as evidence of:
 
 - AI application engineering
 - agent/tool orchestration
@@ -127,6 +142,6 @@ Gandalf is most valuable on a resume when presented as evidence of:
 - computer vision
 - voice AI
 - automation
-- reliability and safety thinking
+- reliability and safety engineering
 
-The repository should not be presented as a production enterprise agent until the hardening roadmap is actually implemented and verified.
+The repository should not be presented as a production enterprise agent until the remaining hardening, evaluation, and integration work is actually implemented and verified.
