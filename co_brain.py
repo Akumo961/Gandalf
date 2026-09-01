@@ -26,6 +26,7 @@ from Vision.Vbrain import capture_image_and_save
 from Vision.Vbrain import encode_image_to_base64, vision_brain
 from Weather_Check.check_weather import get_weather_by_address
 from Whatsapp_automation.wa import send_msg_wa
+from core.command_utils import normalize_spoken_time, parse_percentage
 
 
 RUNTIME_DIR = Path(".runtime")
@@ -63,27 +64,12 @@ def _handle_mobile_vision() -> None:
 def _handle_command(command: str) -> None:
     """Dispatch one normalized command to the appropriate capability."""
     if command.startswith("tell me"):
-        normalized = command.replace(" p.m.", "PM").replace(" a.m.", "AM")
-        if "11:" in normalized or "12:" in normalized:
-            input_manage(normalized)
-        else:
-            for number in range(1, 10):
-                marker = f"{number}:"
-                if marker in normalized:
-                    input_manage(normalized.replace(marker, f"0{marker}"))
-                    break
+        input_manage(normalize_spoken_time(command))
         _clear_input()
         return
 
     if command.startswith("set alarm"):
-        normalized = command.replace(" p.m.", "PM").replace(" a.m.", "AM")
-        if "11:" not in normalized and "12:" not in normalized:
-            for number in range(1, 10):
-                marker = f"{number}:"
-                if marker in normalized:
-                    normalized = normalized.replace(marker, f"0{marker}")
-                    break
-        input_manage_Alam(normalized)
+        input_manage_Alam(normalize_spoken_time(command))
         _clear_input()
         return
 
@@ -118,10 +104,7 @@ def _handle_command(command: str) -> None:
     if command.startswith("generate image"):
         prompt = command.replace("generate image", "", 1).strip()
         if prompt:
-            if generate_image(prompt):
-                speak("Image generation completed.")
-            else:
-                speak("Image generation failed.")
+            speak("Image generation completed." if generate_image(prompt) else "Image generation failed.")
         return
 
     if any(term in command for term in ("check mike", "check microphone")):
@@ -138,7 +121,7 @@ def _handle_command(command: str) -> None:
 
     if "set brightness percentage" in command:
         value = command.replace("set brightness percentage", "", 1).strip()
-        set_brightness_windows(int(value))
+        set_brightness_windows(parse_percentage(value))
         return
 
     if "check volume level" in command:
@@ -146,8 +129,8 @@ def _handle_command(command: str) -> None:
         return
 
     if "set volume level" in command:
-        value = command.replace("set volume level", "", 1).replace("%", "").strip()
-        set_volume_windows(int(value))
+        value = command.replace("set volume level", "", 1).strip()
+        set_volume_windows(parse_percentage(value))
         return
 
     if "check running application" in command:
