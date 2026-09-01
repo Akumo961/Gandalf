@@ -48,6 +48,9 @@ def update_text(text: str) -> str:
 
 
 def _safe_filename(command: str, extension: str) -> Path:
+    if not extension:
+        raise ValueError("unsupported file type")
+
     name = command.replace("named", "").replace("with name", "")
     name = name.replace("create", "").strip()
     if not name:
@@ -71,9 +74,6 @@ def _safe_filename(command: str, extension: str) -> Path:
 def create_file(text: str) -> Path:
     """Create a file under `.runtime` and return its path."""
     extension = get_file_extension(text)
-    if not extension:
-        raise ValueError("unsupported file type")
-
     destination = _safe_filename(update_text(text), extension)
     destination.touch(exist_ok=True)
     print(f"Created {destination}")
