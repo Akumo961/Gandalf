@@ -1,64 +1,189 @@
-# J.A.R.V.I.S - Just A Rather Very Intelligent System 🤖
+# Gandalf — Multimodal AI Voice Agent & Desktop Automation
 
-[![LinkedIn][linkedin-shield]][linkedin-url]
-[![Instagram][instagram-shield]][instagram-url]
-[![Twitter][twitter-shield]][twitter-url]
-[![YouTube][youtube-shield]][youtube-url]
-[![Telegram][telegram-shield]][telegram-url]
+> A Python-based AI assistant that combines voice interaction, LLM reasoning, computer vision, image generation, and desktop automation into one extensible agent.
 
-**Welcome to J.A.R.V.I.S!**  
-J.A.R.V.I.S (Just A Rather Very Intelligent System) is an advanced AI assistant inspired by Iron Man's Jarvis, designed to assist with various tasks, from navigating websites to controlling your PC with natural language commands.
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](https://www.python.org/)
+[![AI Engineering](https://img.shields.io/badge/Focus-AI%20Engineering-purple)](#ai-engineering-focus)
+[![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
 
-![image](https://github.com/user-attachments/assets/59727c15-d85a-41bc-b27d-bea08b3b3a41)
+## Why this project exists
 
+Gandalf is a hands-on AI engineering project built around a practical question:
 
-## Installation ⚙️
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/AnubhavChaturvedi-GitHub/J.A.R.V.I.S.git
-    ```
-2. Navigate to the project directory:
-    ```bash
-    cd J.A.R.V.I.S
-    ```
-3. Install the dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
+**How can an AI assistant understand natural-language requests and safely connect LLM capabilities to real-world computer actions?**
 
-## Usage 🚀
-To start the assistant, run:
+The project explores the engineering layer between an LLM and a user's operating system: speech input/output, intent routing, tool execution, computer vision, image generation, system telemetry, and automation.
+
+This repository is intentionally more than a chatbot. It is an experimental **multimodal agent architecture** with modular integrations for AI and operating-system capabilities.
+
+## Core capabilities
+
+- **Voice interaction** — speech-to-text input and text-to-speech responses.
+- **LLM reasoning** — natural-language requests are routed through an LLM-backed reasoning layer.
+- **Computer vision** — capture and analyze images from a local camera.
+- **Image generation** — generate images from natural-language prompts.
+- **Desktop automation** — launch and control supported computer tasks through Python integrations.
+- **System awareness** — inspect battery, running applications, audio devices, brightness, and volume.
+- **Productivity automation** — alarms, scheduling, weather queries, file creation, and messaging workflows.
+- **Modular architecture** — AI, vision, speech, automation, and system features are separated into Python modules.
+- **Online/offline handling** — the application checks connectivity before starting network-dependent functionality.
+
+## AI Engineering Focus
+
+The most relevant engineering concepts demonstrated by Gandalf are:
+
+| Area | Implementation focus |
+| --- | --- |
+| LLM applications | LLM-backed conversational reasoning and intent handling |
+| AI agents | Natural-language requests mapped to application capabilities |
+| Multimodal AI | Voice + text + image input/output |
+| Computer vision | Local image capture and vision analysis |
+| Tool integration | AI-connected automation functions |
+| AI orchestration | Central routing layer connecting AI to tools |
+| Python engineering | Modular packages and feature-specific components |
+| Concurrency | Threaded speech, reasoning, monitoring, and scheduling workflows |
+| System integration | Windows APIs and desktop/device controls |
+
+## Architecture
+
+At a high level, Gandalf follows this flow:
+
+```text
+Voice / Text Input
+        │
+        ▼
+Speech & Input Layer
+        │
+        ▼
+Intent / Command Router
+        │
+        ├──────────────► LLM Reasoning
+        │                     │
+        │                     ▼
+        │               Natural-language response
+        │
+        ├──────────────► Computer Vision
+        ├──────────────► Image Generation
+        ├──────────────► Desktop Automation
+        ├──────────────► System Controls
+        └──────────────► Productivity Integrations
+                              │
+                              ▼
+                    Voice / UI Response
+```
+
+The current implementation is organized around modules such as `Brain`, `Vision`, `Automation`, `TextToSpeech`, `NetHyTechSTT`, `Features`, and `Time_Operations`.
+
+## Example interactions
+
+```text
+"Jarvis, what can you see?"
+        → capture an image
+        → send it through the vision layer
+        → return an AI-generated description
+        → speak the result
+```
+
+```text
+"Generate an image of a futuristic city"
+        → extract the generation prompt
+        → call the image-generation integration
+        → create the requested image
+```
+
+```text
+"Check the volume level"
+        → route the command
+        → query the Windows audio subsystem
+        → return the current level
+```
+
+## Project structure
+
+```text
+Gandalf/
+├── Brain/                 # LLM reasoning layer
+├── Automation/            # Desktop automation and command execution
+├── Vision/                # Computer-vision integrations
+├── TextToSpeech/          # Speech synthesis
+├── NetHyTechSTT/          # Speech recognition/input
+├── Features/              # System and productivity features
+├── Time_Operations/       # Scheduling and alarm logic
+├── Weather_Check/         # Weather integration
+├── TextToImage/           # Image-generation integration
+├── Data/                  # Dialog and application data
+├── jarvis.py              # Application entry point
+├── co_brain.py            # Input routing and orchestration
+├── requirements.txt       # Python dependencies
+└── LICENSE                # GPL-3.0 license
+```
+
+## Running locally
+
+### Requirements
+
+- Windows
+- Python 3.10+
+- A working microphone for voice interaction
+- Optional camera for vision features
+- Internet access for network-backed AI/integration features
+- Credentials/configuration required by the external AI providers used by the selected modules
+
+### Install
+
+```bash
+git clone https://github.com/Akumo961/Gandalf.git
+cd Gandalf
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Start
+
 ```bash
 python jarvis.py
 ```
 
-## Contribution 🤝
-Feel free to fork the repository, submit issues, or create pull requests. Your contributions are welcome!
+> Some integrations are Windows-specific and may require additional system configuration or provider credentials.
 
-## License 📄
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-<!-- Linkedin -->
+## Engineering notes
 
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=0B5FBB
-[linkedin-url]: https://www.linkedin.com/in/anubhav-chaturvedi-/
+Gandalf began as a personal desktop assistant and has evolved into a practical exploration of AI-agent engineering. The repository intentionally contains integrations with operating-system capabilities rather than limiting the application to text generation.
 
-<!-- Instagram -->
+The next engineering direction is to make the agent architecture more production-oriented: explicit tool schemas, provider abstraction, configuration through environment variables, structured logging, automated tests, safer tool execution, evaluation of LLM behavior, and clearer separation between model reasoning and side effects.
 
-[instagram-shield]: https://img.shields.io/badge/Instagram-%23E4405F.svg?style=for-the-badge&logo=Instagram&logoColor=white
-[instagram-url]: https://www.instagram.com/_anubhav__chaturvedi_/
+See [`AI_ENGINEERING.md`](AI_ENGINEERING.md) for the portfolio-oriented engineering roadmap and interview talking points.
 
-<!-- Twitter -->
+## Security considerations
 
-[twitter-shield]: https://img.shields.io/badge/Twitter-%231DA1F2.svg?style=for-the-badge&logo=Twitter&logoColor=white
-[twitter-url]: https://x.com/AnubhavChatu
+Gandalf can interact with the local operating system. Treat it as experimental software and run it with appropriate permissions.
 
+Before using the project with sensitive environments, review and harden:
 
-<!-- YouTube -->
-[youtube-shield]: https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white
-[youtube-url]: https://www.youtube.com/@NetHyTech
+- tool permissions and command execution
+- credential management
+- filesystem access
+- external integrations
+- prompt/command validation
+- logging of user input and generated output
+- model-generated actions
 
-<!-- Telegram -->
-[telegram-shield]: https://img.shields.io/badge/Telegram-%231DA1F2.svg?style=for-the-badge&logo=Telegram&logoColor=white
-[telegram-url]: https://t.me/YourTelegramUsername
+The project does **not** claim to be production-safe or enterprise-secure without additional hardening and validation.
 
+## Status
 
+**Portfolio project / active engineering work.**
+
+The project demonstrates practical AI-agent integration and is being modernized toward a cleaner, testable, provider-independent architecture.
+
+## License
+
+GPL-3.0. See [`LICENSE`](LICENSE).
+
+## Author
+
+**Ali El-Sayed Ali (Akumo961)**
+
+GitHub: https://github.com/Akumo961
