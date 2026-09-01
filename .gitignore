@@ -12,8 +12,10 @@ env/
 htmlcov/
 
 # Local runtime state
+.runtime/
 input.txt
 log.txt
+chat_hystory.txt
 Alam_data.txt
 schedule.txt
 captured_image.png
