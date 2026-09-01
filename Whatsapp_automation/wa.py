@@ -1,39 +1,76 @@
+"""Optional WhatsApp automation adapter.
+
+This integration is deliberately configuration-driven: no phone numbers or
+message history are stored in source control.
+"""
+
+from __future__ import annotations
+
+import os
+import time
+from pathlib import Path
+
 import pywhatkit as kit
-import datetime
+
 from TextToSpeech.Fast_DF_TTS import speak
-from os import getcwd
 
-now = datetime.datetime.now()
-hour = now.hour
-minute = now.minute
 
-def clear_file():
-    with open(f"{getcwd()}\\input.txt","w") as file:
-        file.truncate(0)
-        
-anubhav = "+919606348280"
+RUNTIME_INPUT = Path(".runtime") / "input.txt"
+RECIPIENT = os.getenv("GANDALF_WHATSAPP_RECIPIENT", "")
 
-def send_msg_wa():
-    speak("who do you want to send sir ?")
-    output_text = ""
+
+def _read_input() -> str:
+    try:
+        return RUNTIME_INPUT.read_text(encoding="utf-8").strip().lower()
+    except FileNotFoundError:
+        return ""
+
+
+def _clear_input() -> None:
+    RUNTIME_INPUT.parent.mkdir(parents=True, exist_ok=True)
+    RUNTIME_INPUT.write_text("", encoding="utf-8")
+
+
+def send_msg_wa() -> bool:
+    """Send a WhatsApp message to the configured recipient after confirmation."""
+    if not RECIPIENT:
+        speak("WhatsApp is not configured. Set GANDALF_WHATSAPP_RECIPIENT first.")
+        return False
+
+    speak("Who do you want to send the message to?")
+    previous = ""
     while True:
-        with open("input.txt","r") as file:
-            input_text = file.read().lower() 
-        if input_text != output_text:
-            output_text = input_text
-            if output_text.startswith("send to") or output_text.startswith("send tu"):
-                output_text.replace("send to","")
-                output_text.replace("send tu","")
-                if "anubhav" in output_text:
-                    speak("By the way what is the message , sir ?")
-                    while True:
-                       with open("input.txt","r") as file:
-                          input_text = file.read().lower() 
-                          if input_text != output_text:
-                              output_text = input_text
-                              if output_text.startswith("message is"):
-                                  message =  output_text.replace("message is","")
-                                  kit.sendwhatmsg(anubhav,message,hour,minute+1)
-                                  speak("message send successfully")
-                                 
+        current = _read_input()
+        if current and current != previous:
+            previous = current
+            if current.startswith(("send to", "send tu")):
+                speak("What is the message?")
+                _clear_input()
+                break
+        time.sleep(0.15)
 
+    previous = ""
+    while True:
+        current = _read_input()
+        if current and current != previous:
+            previous = current
+            if current.startswith("message is"):
+                message = current.replace("message is", "", 1).strip()
+                if not message:
+                    speak("The message is empty.")
+                    return False
+                try:
+                    now = time.localtime()
+                    kit.sendwhatmsg(
+                        RECIPIENT,
+                        message,
+                        now.tm_hour,
+                        (now.tm_min + 1) % 60,
+                    )
+                    speak("Message scheduled successfully.")
+                    return True
+                except Exception as exc:
+                    print(f"WhatsApp automation error: {exc}")
+                    speak("I couldn't schedule the WhatsApp message.")
+                    return False
+        time.sleep(0.15)
