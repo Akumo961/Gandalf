@@ -1,7 +1,7 @@
 """Optional WhatsApp automation adapter.
 
 This integration is configuration-driven: no phone numbers or message history
-are stored in source control.
+are stored in source control. Sending is disabled unless explicitly enabled.
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ from TextToSpeech.Fast_DF_TTS import speak
 
 RUNTIME_INPUT = Path(".runtime") / "input.txt"
 RECIPIENT = os.getenv("GANDALF_WHATSAPP_RECIPIENT", "")
+ALLOW_SEND = os.getenv("GANDALF_ALLOW_WHATSAPP_SEND", "false").lower() == "true"
 
 
 def _read_input() -> str:
@@ -33,7 +34,10 @@ def _clear_input() -> None:
 
 
 def send_msg_wa() -> bool:
-    """Send a WhatsApp message to the configured recipient after confirmation."""
+    """Send a WhatsApp message to the configured recipient when explicitly enabled."""
+    if not ALLOW_SEND:
+        speak("WhatsApp sending is disabled. Enable GANDALF_ALLOW_WHATSAPP_SEND to use it.")
+        return False
     if not RECIPIENT:
         speak("WhatsApp is not configured. Set GANDALF_WHATSAPP_RECIPIENT first.")
         return False
