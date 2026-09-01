@@ -1,85 +1,85 @@
-import requests
-import json
+"""Mobile/DroidCam capture adapter and vision-model integration."""
+
+from __future__ import annotations
+
 import base64
+import os
+from pathlib import Path
+
 import cv2
+import requests
 
-def capture_image_and_save(image_path="captured_image.png"):
-    # Replace the IP and port with your DroidCam IP and port
-    droidcam_url = "http://192.168.203.6:4747/video"  # Example IP and port, replace with yours
-    cap = cv2.VideoCapture(droidcam_url)
 
+CAMERA_URL = os.getenv("GANDALF_MOBILE_CAMERA_URL", "")
+VISION_ENDPOINT = os.getenv(
+    "GANDALF_VISION_ENDPOINT",
+    "https://api.deepinfra.com/v1/openai/chat/completions",
+)
+VISION_MODEL = os.getenv("GANDALF_VISION_MODEL", "llava-hf/llava-1.5-7b-hf")
+REQUEST_TIMEOUT = float(os.getenv("GANDALF_REQUEST_TIMEOUT", "30"))
+
+
+def capture_image_and_save(image_path: str = "captured_image.png") -> bool:
+    """Capture one frame from the configured mobile camera stream."""
+    if not CAMERA_URL:
+        print("Mobile camera is not configured. Set GANDALF_MOBILE_CAMERA_URL.")
+        return False
+
+    output = Path(image_path)
+    cap = cv2.VideoCapture(CAMERA_URL)
     if not cap.isOpened():
-        print("Error: Could not open camera.")
+        print("Error: could not open the configured mobile camera.")
         return False
 
     try:
-        # Capture a single frame
-        ret, frame = cap.read()
-
-        if ret:
-            # Save the image in PNG format
-            cv2.imwrite(image_path, frame)
-            print(f"Image captured and saved as {image_path}")
-            return True
-        else:
-            print("Error: Could not capture image.")
+        ok, frame = cap.read()
+        if not ok:
+            print("Error: could not capture a mobile-camera frame.")
             return False
+        output.parent.mkdir(parents=True, exist_ok=True)
+        return bool(cv2.imwrite(str(output), frame))
     finally:
-        # Release the camera
         cap.release()
         cv2.destroyAllWindows()
 
-# Function to encode an image to Base64
-def encode_image_to_base64(image_path):
-    with open(image_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-    return encoded_string
 
-def mobile_vision_brain(encoded_image):
-    url = "https://api.deepinfra.com/v1/openai/chat/completions"
+def encode_image_to_base64(image_path: str) -> str:
+    return base64.b64encode(Path(image_path).read_bytes()).decode("utf-8")
 
-    headers = {
-        "accept": "text/event-stream",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0",
-        "x-deepinfra-source": "model-embed"
-    }
+
+def mobile_vision_brain(encoded_image: str) -> str:
+    """Send the mobile-camera frame to the configured OpenAI-compatible endpoint."""
+    headers = {"Content-Type": "application/json"}
+    api_key = os.getenv("DEEPINFRA_API_KEY")
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
 
     payload = {
-        "model": "llava-hf/llava-1.5-7b-hf",
+        "model": VISION_MODEL,
         "messages": [
             {
                 "role": "user",
                 "content": [
                     {
                         "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{encoded_image}"
-                        }
+                        "image_url": {"url": f"data:image/png;base64,{encoded_image}"},
                     },
-                    {
-                        "type": "text",
-                        "text": "What is written in this image?"
-                    }
-                ]
+                    {"type": "text", "text": "Describe what is visible in this image."},
+                ],
             }
-        ]
+        ],
     }
 
-    # Convert the payload to JSON
-    payload_json = json.dumps(payload)
-
-    # Make the POST request
-    response = requests.post(url, headers=headers, data=payload_json)
-
-    # Check if the request was successful
-    if response.status_code == 200:
-        response_str = response.content.decode('utf-8')
-        data = json.loads(response_str)
-        answer = data['choices'][0]['message']['content']
-        return answer
-    else:
-        print(f"Error: API request failed with status code {response.status_code}")
-        return None
-
-
-
+    try:
+        response = requests.post(
+            VISION_ENDPOINT,
+            headers=headers,
+            json=payload,
+            timeout=REQUEST_TIMEOUT,
+        )
+        response.raise_for_status()
+        data = response.json()
+        return str(data["choices"][0]["message"]["content"]).strip()
+    except (requests.RequestException, KeyError, IndexError, TypeError, ValueError) as exc:
+        print(f"Mobile vision provider error: {exc}")
+        return "I couldn't analyze the mobile-camera image right now."
