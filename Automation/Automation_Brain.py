@@ -1,121 +1,116 @@
-from Automation.open_App import open_App
-from Automation.Web_Open import openweb
-import pyautogui as gui
-from Automation.Play_Music_YT import play_music_on_youtube
-from TextToSpeech import Fast_DF_TTS
-from Automation.playmusic_Sfy import play_music_on_spotify
-from Automation.Battery import check_percentage
-from os import getcwd
+"""Desktop automation command adapter."""
+
+from __future__ import annotations
+
+import threading
 import time
+from pathlib import Path
+
+import pyautogui as gui
+import pywhatkit
+
+from Automation.Battery import check_percentage
+from Automation.Play_Music_YT import play_music_on_youtube
+from Automation.Web_Open import openweb
+from Automation.open_App import open_App
+from Automation.playmusic_Sfy import play_music_on_spotify
+from Automation.scrool_system import perform_scroll_action
 from Automation.tab_automation import perform_browser_action
 from Automation.Youtube_play_back import perform_media_action
-import pywhatkit
-from Automation.scrool_system import perform_scroll_action
-import threading
 from TextToSpeech.Fast_DF_TTS import speak
 
-def play():
+
+RUNTIME_INPUT = Path(".runtime") / "input.txt"
+
+
+def play() -> None:
     gui.press("space")
-    
-def search_google(text):
+
+
+def search_google(text: str) -> None:
     pywhatkit.search(text)
 
-def close():
-    gui.hotkey('alt','f4')
-    
-def search(text):
+
+def close() -> None:
+    gui.hotkey("alt", "f4")
+
+
+def search(text: str) -> None:
     gui.press("/")
     time.sleep(0.3)
-    gui.write(text)
+    gui.write(text, interval=0.01)
 
-def Open_Brain(text):
-    if "website" in text or "open website named" in text:
-        text = text.replace("open","").strip()
-        text = text.replace("website","").strip()
-        text = text.replace("open website named","").strip()
-        t1 = threading.Thread(target=speak,args=(f"Navigating {text} website",))
-        t2 = threading.Thread(target=openweb,args=(text,))
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-    else:
-        text = text.replace("open","").strip()
-        text = text.replace("app","").strip()
-        t1 = threading.Thread(target=speak,args=(f"Navigating {text} application",))
-        t2 = threading.Thread(target=open_App,args=(text,))
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-        
-def clear_file():
-    with open(f"{getcwd()}\\input.txt","w") as file:
-        file.truncate(0)
 
-def Auto_main_brain(text):
-   try: 
-    if text.startswith("open"):
-        Open_Brain(text)
-    elif "close" in text:
-        close()
-    elif "play music" in text or "play music on youtube" in text:
-        Fast_DF_TTS.speak("which song do you want to play sir.")
-        clear_file()
-        output_text = ""
-        while True:
-            with open("input.txt","r") as file:
-                input_text = file.read().lower()
-            if input_text != output_text:
-                output_text = input_text
-                if output_text.endswith("song"):
-                    play_music_on_youtube(output_text)
-                    break
-                    
+def clear_file() -> None:
+    RUNTIME_INPUT.parent.mkdir(parents=True, exist_ok=True)
+    RUNTIME_INPUT.write_text("", encoding="utf-8")
+
+
+def _wait_for_song() -> str:
+    """Wait for the STT layer to write a command containing a song."""
+    previous = ""
+    while True:
+        try:
+            current = RUNTIME_INPUT.read_text(encoding="utf-8").strip().lower()
+        except FileNotFoundError:
+            clear_file()
+            current = ""
+        if current and current != previous:
+            previous = current
+            if current.endswith("song"):
+                return current
+        time.sleep(0.15)
+
+
+def Open_Brain(text: str) -> None:
+    """Open a known website or Windows application."""
+    cleaned = text.strip()
+    if "website" in cleaned or "open website named" in cleaned:
+        target = cleaned.replace("open website named", "").replace("website", "").replace("open", "").strip()
+        speak(f"Navigating to {target}.")
+        openweb(target)
+        return
+
+    target = cleaned.replace("app", "").replace("open", "").strip()
+    speak(f"Opening {target}.")
+    open_App(target)
+
+
+def Auto_main_brain(text: str) -> None:
+    """Dispatch a desktop automation command."""
+    command = text.strip().lower()
+    if not command:
+        return
+
+    try:
+        if command.startswith("open"):
+            Open_Brain(command)
+        elif "close" in command:
+            close()
+        elif "play music" in command or "play music on youtube" in command:
+            speak("Which song would you like to play?")
+            clear_file()
+            play_music_on_youtube(_wait_for_song())
+        elif "play some music" in command or "play music on spotify" in command:
+            speak("Which song would you like to play?")
+            clear_file()
+            play_music_on_spotify(_wait_for_song())
+        elif "check battery percentage" in command or "check battery level" in command:
+            check_percentage()
+        elif command.startswith("search in google"):
+            query = command.replace("search in google", "", 1).strip()
+            speak(f"Searching Google for {query}.")
+            threading.Thread(target=search_google, args=(query,), daemon=True).start()
+        elif command.startswith("search"):
+            query = command.replace("search", "", 1).strip()
+            speak(f"Searching for {query}.")
+            search(query)
+            gui.press("enter")
+        elif any(term in command for term in ("play", "stop", "pause")):
+            play()
         else:
-            pass
-        
-    elif "play some music" in text or "play music on spotify" in text:
-        Fast_DF_TTS.speak("Which song do you want to play, sir.")
-        clear_file()
-        output_text = ""
-        while True:
-            with open("input.txt", "r") as file:
-                input_text = file.read().lower()
-            if input_text != output_text:
-                output_text = input_text
-                if output_text.endswith("song"):
-                    play_music_on_spotify(output_text)
-                    break
-
-    elif "check battery percentage" in text or "check battery level" in text:
-        check_percentage()
-    elif text.startswith("search"):
-        text = text.replace("search","")
-        text = text.strip()
-        t1 = threading.Thread(target=speak,args=(f"doing research about {text}",))
-        t2 = threading.Thread(target=search,args=(text,))
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-        time.sleep(0.5)
-        gui.press("enter")
-    elif "search in google" in text:
-        text = text.replace("search in google","")
-        t1 = threading.Thread(target=speak,args=(f"performing research about {text} in google search engine",))
-        t2 = threading.Thread(target=search_google,args=(text,))
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-    elif "play" in text or "stop" in text or "pause" in text:
-        play()
-    else:
-        perform_browser_action(text)
-        perform_media_action(text)
-        perform_scroll_action(text)
-        
-   except Exception as e:
-       print("error : " + e)
-       
+            perform_browser_action(command)
+            perform_media_action(command)
+            perform_scroll_action(command)
+    except Exception as exc:
+        print(f"Automation error: {exc}")
