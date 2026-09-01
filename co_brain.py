@@ -81,15 +81,16 @@ def _handle_command(command: str) -> None:
         create_file(command)
         return
 
-    if "what is this" in command or "what can you see" in command:
-        _handle_vision()
-        return
-
+    # Keep the more specific mobile-camera command ahead of the generic vision command.
     if (
         "what is in front of mobile camera" in command
         or "what can you see use mobile camera" in command
     ):
         _handle_mobile_vision()
+        return
+
+    if "what is this" in command or "what can you see" in command:
+        _handle_vision()
         return
 
     if "check weather" in command:
@@ -104,7 +105,11 @@ def _handle_command(command: str) -> None:
     if command.startswith("generate image"):
         prompt = command.replace("generate image", "", 1).strip()
         if prompt:
-            speak("Image generation completed." if generate_image(prompt) else "Image generation failed.")
+            speak(
+                "Image generation completed."
+                if generate_image(prompt)
+                else "Image generation failed."
+            )
         return
 
     if any(term in command for term in ("check mike", "check microphone")):
