@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local runtime state
+input.txt
+log.txt
+Alam_data.txt
+schedule.txt
+captured_image.png
+generated_image.png
+*.mp3
+
+# Local secrets/config
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Browser/driver binaries
+chromedriver.exe
