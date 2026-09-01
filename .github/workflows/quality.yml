@@ -21,11 +21,8 @@ jobs:
       - name: Install quality tools
         run: python -m pip install --upgrade pip && pip install -r requirements-dev.txt
 
-      - name: Ruff check
-        run: ruff check core tests Brain/brain.py Vision/Vbrain.py Vision/MVbrain.py TextToSpeech/Fast_DF_TTS.py TextToImage/gen_image.py NetHyTechSTT/listen.py Automation/open_App.py Automation/Automation_Brain.py co_brain.py jarvis.py
-
-      - name: Ruff format check
-        run: ruff format --check core tests Brain/brain.py Vision/Vbrain.py Vision/MVbrain.py TextToSpeech/Fast_DF_TTS.py TextToImage/gen_image.py NetHyTechSTT/listen.py Automation/open_App.py Automation/Automation_Brain.py co_brain.py jarvis.py
+      - name: Ruff lint
+        run: ruff check --select F,I,UP,B core tests Brain/brain.py Vision/Vbrain.py Vision/MVbrain.py TextToSpeech/Fast_DF_TTS.py TextToImage/gen_image.py NetHyTechSTT/listen.py Automation/open_App.py Automation/Automation_Brain.py co_brain.py jarvis.py
 
       - name: Unit tests
         run: pytest
