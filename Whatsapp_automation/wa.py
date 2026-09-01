@@ -1,13 +1,14 @@
 """Optional WhatsApp automation adapter.
 
-This integration is deliberately configuration-driven: no phone numbers or
-message history are stored in source control.
+This integration is configuration-driven: no phone numbers or message history
+are stored in source control.
 """
 
 from __future__ import annotations
 
 import os
 import time
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pywhatkit as kit
@@ -60,12 +61,12 @@ def send_msg_wa() -> bool:
                     speak("The message is empty.")
                     return False
                 try:
-                    now = time.localtime()
+                    scheduled = datetime.now() + timedelta(minutes=1)
                     kit.sendwhatmsg(
                         RECIPIENT,
                         message,
-                        now.tm_hour,
-                        (now.tm_min + 1) % 60,
+                        scheduled.hour,
+                        scheduled.minute,
                     )
                     speak("Message scheduled successfully.")
                     return True
