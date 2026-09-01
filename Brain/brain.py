@@ -1,28 +1,41 @@
-# from webscout import PhindSearch as brain
+"""LLM reasoning adapter used by Gandalf.
 
+The provider remains isolated behind Main_Brain so the rest of the application
+can evolve without coupling orchestration code to a specific LLM SDK.
+"""
 
-# ai = brain(
-#     is_conversation=True,
-#     max_tokens=800,
-#     timeout=30,
-#     intro='J.A.R.V.I.S',
-#     filepath=r"C:\Users\chatu\Desktop\J.A.R.V.I.S\chat_hystory.txt",
-#     update_file=True,
-#     proxies={},
-#     history_offset=10250,
-#     act=None,
-# )
+from __future__ import annotations
 
-# def Main_Brain(text):
-#     r = ai.chat(text)
-#     return r 
+import os
+from pathlib import Path
 
 from webscout import PhindSearch
 
-def Main_Brain(text):
-    ai = PhindSearch(quiet=True, filepath=r"C:\Users\chatu\Desktop\J.A.R.V.I.S\chat_hystory.txt", is_conversation=None)
 
-    res = ai.chat(text) # internel stream is not available for this Privider
+DEFAULT_HISTORY_FILE = Path(".runtime") / "chat_history.txt"
 
-    return res
 
+def _history_path() -> str:
+    configured = os.getenv("GANDALF_CHAT_HISTORY")
+    path = Path(configured) if configured else DEFAULT_HISTORY_FILE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return str(path)
+
+
+def Main_Brain(text: str) -> str:
+    """Generate a response for *text* through the configured reasoning provider."""
+    if not text or not text.strip():
+        return "Please provide a request."
+
+    try:
+        ai = PhindSearch(
+            quiet=True,
+            filepath=_history_path(),
+            is_conversation=None,
+        )
+        response = ai.chat(text.strip())
+        return str(response).strip()
+    except Exception as exc:
+        # Keep provider failures from crashing the desktop agent.
+        print(f"LLM provider error: {exc}")
+        return "I couldn't reach the language model right now."
