@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 import time
 from pathlib import Path
 
@@ -174,8 +175,8 @@ def Jarvis() -> None:
     """Start speech recognition and command orchestration."""
     RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
     _clear_input()
-    listener = __import__("threading").Thread(target=listen, daemon=True)
-    command_loop = __import__("threading").Thread(target=check_inputs, daemon=True)
+    listener = threading.Thread(target=listen, daemon=True)
+    command_loop = threading.Thread(target=check_inputs, daemon=True)
     listener.start()
     command_loop.start()
     listener.join()
