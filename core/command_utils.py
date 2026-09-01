@@ -6,7 +6,6 @@ import re
 
 
 _TIME_MARKER = re.compile(r"\b([1-9]):")
-_PERCENTAGE = re.compile(r"^(?:100|[1-9]?\d)%?$")
 
 
 def normalize_spoken_time(text: str) -> str:
