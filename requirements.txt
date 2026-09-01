@@ -1,37 +1,31 @@
+# Core HTTP / AI integrations
 requests
-
-winotify
-
-pyautogui
-
-pywhatkit
-
-playsound==1.2.2
-
-psutil
-
-selenium
-
-webdriver_manager
-
 webscout
 
-lxml_html_clean
+# Browser and desktop automation
+pyautogui
+pywhatkit
+selenium
+webdriver-manager
 
-gradio_client
-
-colorlog
-
-yaspin
-
-opencv-python
-
+# Audio / speech
+playsound==1.2.2
 pyaudio
 
+# Computer vision / media
+opencv-python
+Pillow
 scipy
 
+# Windows system integration
+comtypes
+psutil
+pycaw
 wmi
 
-comtypes
-
-pycaw
+# Application utilities
+colorlog
+gradio_client
+lxml_html_clean
+winotify
+yaspin
