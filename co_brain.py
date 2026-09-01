@@ -1,17 +1,11 @@
-"""Command orchestration for the Gandalf desktop agent.
-
-This module keeps the legacy feature integrations while making the main input
-loop easier to reason about, less CPU-intensive, and safer to run repeatedly.
-"""
+"""Command orchestration for the Gandalf desktop agent."""
 
 from __future__ import annotations
 
-import threading
 import time
 from pathlib import Path
 
-from Automation.Automation_Brain import Auto_main_brain, clear_file
-from Automation.Battery import battery_Alert
+from Automation.Automation_Brain import Auto_main_brain
 from Brain.brain import Main_Brain
 from Features.br_persentage import check_br_persentage
 from Features.check_running_app import check_running_app
@@ -39,7 +33,7 @@ CAPTURED_IMAGE = RUNTIME_DIR / "captured_image.png"
 
 
 def _read_input() -> str:
-    """Read the latest STT command without failing on a missing runtime file."""
+    """Read the latest STT command without failing on missing runtime state."""
     try:
         return INPUT_FILE.read_text(encoding="utf-8").strip().lower()
     except FileNotFoundError:
@@ -93,8 +87,7 @@ def _handle_command(command: str) -> None:
         return
 
     if "jarvis" in command:
-        response = Main_Brain(command)
-        speak(response)
+        speak(Main_Brain(command))
         return
 
     if command.startswith("create") and "file" in command:
@@ -181,8 +174,8 @@ def Jarvis() -> None:
     """Start speech recognition and command orchestration."""
     RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
     _clear_input()
-    listener = threading.Thread(target=listen, daemon=True)
-    command_loop = threading.Thread(target=check_inputs, daemon=True)
+    listener = __import__("threading").Thread(target=listen, daemon=True)
+    command_loop = __import__("threading").Thread(target=check_inputs, daemon=True)
     listener.start()
     command_loop.start()
     listener.join()
