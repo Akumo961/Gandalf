@@ -118,8 +118,10 @@ def _handle_command(command: str) -> None:
     if command.startswith("generate image"):
         prompt = command.replace("generate image", "", 1).strip()
         if prompt:
-            generate_image(prompt)
-            speak("Image generation completed.")
+            if generate_image(prompt):
+                speak("Image generation completed.")
+            else:
+                speak("Image generation failed.")
         return
 
     if any(term in command for term in ("check mike", "check microphone")):
